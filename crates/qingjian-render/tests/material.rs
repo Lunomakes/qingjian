@@ -43,6 +43,7 @@ fn material_replaces_the_window_fill_only_when_the_shell_supports_it() {
             radius: 24.0,
             follows_backdrop: true,
             locked_dark: None,
+            shadow: true,
         })
     );
     assert_eq!(

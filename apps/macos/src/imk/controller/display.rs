@@ -69,7 +69,7 @@ impl QingjianInputController {
         let translating = host::with(|h| h.engine.panel_translating()).unwrap_or(false);
         if !translating {
             if inline {
-                client.set_marked_text(&marked, cursor);
+                client.set_marked_text(&spaced(&marked), cursor);
             } else if marked.is_empty() {
                 client.set_marked_text("", 0);
             } else {
@@ -113,7 +113,7 @@ impl QingjianInputController {
         })
         .flatten();
         if let Some((text, cursor)) = marked {
-            client.set_marked_text(&text, cursor);
+            client.set_marked_text(&spaced(&text), cursor);
         }
         // 翻译组：应用里显示最近一条译文；还没有时放零宽空格，应用照样当在组句
         let translation = host::with(|h| {
@@ -400,4 +400,9 @@ impl QingjianInputController {
         self.turn_page(step, client);
         true
     }
+}
+
+/// 应用里的拼音按音节用空格隔开（`ni hao`），与系统简体拼音一致；一个字符换一个字符，光标位置不变。
+fn spaced(marked: &str) -> String {
+    marked.replace('\'', " ")
 }

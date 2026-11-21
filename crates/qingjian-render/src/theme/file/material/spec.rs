@@ -16,6 +16,9 @@ pub(crate) struct MaterialSpec {
     /// `"auto"`：文字跟着材质随背后内容反色；`"system"`：跟系统外观，材质也钉在系统外观上。
     /// 不写时 `glass` 是 `auto`（新玻璃钉不住外观，不跟就只能退回毛玻璃），`blur` 是 `system`。
     pub(crate) appearance: Option<MaterialAppearance>,
+
+    /// 垫上材质后要不要系统按窗口形状画的投影；不写为要。
+    pub(crate) shadow: Option<bool>,
 }
 
 impl MaterialSpec {

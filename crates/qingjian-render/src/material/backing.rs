@@ -15,4 +15,7 @@ pub struct MaterialBacking {
 
     /// 主题锁定的外观：`Some(true)` 只有深色、`Some(false)` 只有浅色，`None` 跟系统。
     pub locked_dark: Option<bool>,
+
+    /// 要系统按窗口形状画投影。
+    pub shadow: bool,
 }
