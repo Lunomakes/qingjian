@@ -5,7 +5,7 @@
 
   // 对齐 macOS 自带简体拼音：整条胶囊、胶囊高亮、末尾分隔线加向下箭头；量自原生输入法 2x 截图
   "variables": {
-    "accent": { "light": "#007aff", "dark": "#0b6bff" },
+    "accent": { "light": "#0060ff", "dark": "#0b6bff" },
     "diff": { "light": "#1d1d1f", "dark": "#f5f5f7" },
     "hl_text": "#ffffff",
     "hl_gloss": "#ffffffd9",
