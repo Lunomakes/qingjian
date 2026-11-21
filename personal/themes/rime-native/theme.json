@@ -13,6 +13,9 @@
     "hl_diff": "#ffffff"
   },
 
+  // 原生候选条与 Rime 都没有投影
+  "material": { "kind": "glass", "shadow": false },
+
   "text": {
     "family": ["PingFang SC", "system"],
     "styles": {
@@ -50,7 +53,7 @@
     "horizontal": {
       "type": "frame", "direction": "column", "padding": 1.5,
       "fill": "@surface", "radius": 13.5, "border": { "width": 0, "color": "@edge" },
-      "effects": [{ "type": "drop-shadow", "y": 3, "blur": 12, "color": "#00000022" }],
+      "effects": [],
       "children": [
         { "type": "use", "component": "top_line", "margin": [0, 12, 0, 12] },
         { "type": "frame", "when": "candidates", "align_self": "stretch", "gap": 3,
