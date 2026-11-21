@@ -1,0 +1,44 @@
+{
+  "extends": "glass",
+  "schema": 1,
+  "meta": { "id": "rime-native", "name": "Rime 原生" },
+
+  // 照搬 ~/Library/Rime/squirrel.custom.yaml 的颜色、字号与圆角
+  "variables": {
+    "text": { "light": "#1c1c1e", "dark": "#e3e3e3" },
+    "gloss": { "light": "#808080", "dark": "#b3b3b3" },
+    "faint": { "light": "#808080", "dark": "#b3b3b3" },
+    "surface": { "light": "#f0f0f0", "dark": "#484848" },
+    "accent": { "light": "#007aff", "dark": "#007aff" },
+    "hl_text": "#ffffff",
+    "hl_gloss": "#ffffff",
+    "hl_faint": "#ffffff"
+  },
+
+  "text": {
+    "family": ["PingFang SC", "system"],
+    "styles": {
+      "candidate": { "size": 16, "line_height": 22 },
+      "annotation": { "size": 12, "line_height": 15 },
+      "index": { "size": 8.5, "line_height": 11 }
+    }
+  },
+
+  "components": {
+    "item": {
+      "type": "frame", "padding": [0, 9, 0, 8],
+      "children": [
+        { "type": "frame", "id": "highlight", "transition": { "duration": 120, "easing": "ease-out" },
+          "when": "highlighted", "position": "absolute", "inset": [0, 0, 0, 0], "fill": "@accent", "radius": 14.5 },
+        { "type": "text", "bind": "index", "font": "index", "margin": [7, 4, 0, 0],
+          "color": { "if": "highlighted", "then": "@hl_faint", "else": "@faint" } },
+        { "type": "use", "component": "word" }
+      ]
+    }
+  },
+
+  "windows": {
+    "vertical": { "radius": 15.5 },
+    "horizontal": { "radius": 15.5, "padding": 2 }
+  }
+}
