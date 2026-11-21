@@ -11,3 +11,5 @@ git push --force-with-lease origin personal
 apps/macos/scripts/bundle.sh --pkg
 pkg="$(ls -t target/pkg/qingjian-*-macos-*.pkg | head -1)"
 sudo installer -pkg "$pkg" -target /
+# postinstall 注册过，但装完后系统偶尔仍把青简从输入源里摘掉，以当前用户身份再注册一次
+"/Library/Input Methods/Qingjian.app/Contents/MacOS/qingjian-macos" --register

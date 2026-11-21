@@ -253,3 +253,13 @@ fn sparse_custom_positions_keep_highlight_on_real_candidates() {
     assert!(session.move_highlight(-1));
     assert_eq!((session.page, session.highlighted), (0, 0));
 }
+
+#[test]
+fn expand_keeps_the_highlight_in_place() {
+    let mut session = Session::default();
+    session.reset(None, candidates(100), 5, 0);
+    assert!(session.expand());
+    assert_eq!((session.highlighted, session.page), (0, 0));
+    assert!(session.grid_cells().is_some());
+    assert!(!session.expand());
+}

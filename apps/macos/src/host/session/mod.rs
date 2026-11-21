@@ -82,6 +82,15 @@ impl Session {
         self.land(moved) || expanding
     }
 
+    /// 单行展开成矩阵，高亮不动。返回原来是不是单行。
+    pub fn expand(&mut self) -> bool {
+        let expanding = self.grid.is_none();
+        if expanding {
+            self.grid = Some(Grid::at(&self.layout, self.page));
+        }
+        expanding
+    }
+
     /// 矩阵里整屏翻（翻页键）：一次 [`GRID_ROWS`] 行。
     pub fn move_screens(&mut self, delta: isize) -> bool {
         self.move_rows(delta * GRID_ROWS as isize)
