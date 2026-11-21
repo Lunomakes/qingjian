@@ -10,6 +10,7 @@ mod key_hint;
 mod menu;
 mod panel;
 mod preedit;
+mod reveal;
 mod row;
 mod theme;
 mod view;

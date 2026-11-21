@@ -11,6 +11,7 @@ use objc2_foundation::{NSPoint, NSRect, NSSize};
 use qingjian_platform::{Appearance, CandidateRenderer, LayoutMode};
 
 use super::backdrop::Backdrop;
+use super::bounds::ViewBounds;
 use super::frame::Frame;
 use super::key_hint::KeyHintPanel;
 use super::theme::Theme;
@@ -72,7 +73,9 @@ impl CandidateWindow {
             return;
         }
         let anchor = self.steady_anchor(anchor);
-        let bounds = self.view.set_frame(&frame);
+        let visible = self.panel.isVisible();
+        let from = self.panel.frame();
+        let bounds = self.view.set_frame(&frame, visible);
         let content = self.place(bounds.content.size, anchor);
         let keyboard = frame.keyboard;
         let origin = NSPoint::new(
@@ -80,9 +83,14 @@ impl CandidateWindow {
             content.y - bounds.content.origin.y,
         );
         let material = self.view.material();
-        self.backdrop.update(material, bounds.content);
-        self.panel
-            .setFrame_display(NSRect::new(origin, bounds.size), true);
+        let target = NSRect::new(origin, bounds.size);
+        let (rect, content_rect) = if self.view.start_reveal(from, target) {
+            (from, content_at(&bounds, from.size))
+        } else {
+            (target, bounds.content)
+        };
+        self.panel.setFrame_display(rect, true);
+        self.backdrop.update(material, content_rect);
         self.order_front_on_active_space();
         self.apply_chrome(material.is_some());
         match keyboard {
@@ -115,6 +123,11 @@ impl CandidateWindow {
             self.panel.invalidateShadow();
         }
         self.panel.setIgnoresMouseEvents(false);
+    }
+
+    /// 「过渡动画」设置。
+    pub fn set_animations(&self, enabled: bool) {
+        self.view.set_animations(enabled);
     }
 
     pub fn hide(&mut self) {
@@ -285,6 +298,20 @@ impl CandidateWindow {
             }
         }
     }
+}
+
+/// 视图缩放到 `size` 时内容区的位置：四边留边保持不变（材质视图跟着窗口伸缩）。
+fn content_at(bounds: &ViewBounds, size: NSSize) -> NSRect {
+    let content = bounds.content;
+    let right = bounds.size.width - content.origin.x - content.size.width;
+    let top = bounds.size.height - content.origin.y - content.size.height;
+    NSRect::new(
+        content.origin,
+        NSSize::new(
+            (size.width - content.origin.x - right).max(0.0),
+            (size.height - content.origin.y - top).max(0.0),
+        ),
+    )
 }
 
 /// 建一块面板并把内容视图装进去：无边框、不抢焦点、透明背景带系统阴影（用青简渲染器时再关）、

@@ -137,6 +137,10 @@ impl Backdrop {
                 installed.view.as_view().removeFromSuperview();
             }
             let view = build(self.container.mtm(), backing.kind);
+            view.as_view().setAutoresizingMask(
+                NSAutoresizingMaskOptions::ViewWidthSizable
+                    | NSAutoresizingMaskOptions::ViewHeightSizable,
+            );
             self.container.addSubview_positioned_relativeTo(
                 view.as_view(),
                 NSWindowOrderingMode::Below,

@@ -4,6 +4,7 @@
 //! 阴影由主题定义、渲染器画进位图（位图四周留边），面板关掉系统阴影，与 Windows 一致。
 
 mod convert;
+mod crop;
 mod font_files;
 mod panel;
 
@@ -12,7 +13,7 @@ pub use panel::PanelPainter;
 
 use objc2::AnyThread;
 use objc2::rc::Retained;
-use objc2_app_kit::{NSBitmapImageRep, NSCalibratedRGBColorSpace, NSCompositingOperation, NSImage};
+use objc2_app_kit::{NSBitmapImageRep, NSCalibratedRGBColorSpace, NSImage};
 use objc2_foundation::{NSPoint, NSRect, NSSize};
 use qingjian_platform::LayoutMode;
 use qingjian_render::{
@@ -28,6 +29,9 @@ pub struct BitmapPainter {
 
     /// 最近一帧的位图，`None` 表示还没画过。
     image: Option<Retained<NSImage>>,
+
+    /// 收起动画期间继续显示的上一帧位图与尺寸（窗口缩到头才换成新位图）。
+    held: Option<(Retained<NSImage>, ViewBounds)>,
 
     /// 最近一帧（外观变了要重画）。
     frame: qingjian_render::Frame,
@@ -91,6 +95,7 @@ impl BitmapPainter {
         Some(Self {
             renderer,
             image: None,
+            held: None,
             frame: qingjian_render::Frame::default(),
             layout: Layout::Vertical,
             dark: false,
@@ -132,28 +137,30 @@ impl BitmapPainter {
         self.bounds
     }
 
-    /// 外观或倍数变了就重画一遍再贴。
-    pub fn draw(&mut self, dark: bool, scale: f32) {
+    /// 外观或倍数变了就重画一遍再贴。`view_size` 是视图此刻的大小：比位图小（窗口正在伸缩）时保角裁剪。
+    pub fn draw(&mut self, dark: bool, scale: f32, view_size: NSSize) {
         if dark != self.dark || scale != self.scale {
             self.dark = dark;
             self.scale = scale;
             self.repaint();
         }
-        let Some(image) = &self.image else {
-            return;
+        let shown = match &self.held {
+            Some((image, bounds)) => Some((image, bounds)),
+            None => self.image.as_ref().map(|image| (image, &self.bounds)),
         };
-        let rect = NSRect::new(NSPoint::ZERO, self.bounds.size);
-        // SAFETY: hints 传 None，其余参数都是普通值；在 drawRect: 内调用，有当前图形上下文。
-        unsafe {
-            image.drawInRect_fromRect_operation_fraction_respectFlipped_hints(
-                rect,
-                NSRect::ZERO,
-                NSCompositingOperation::Copy,
-                1.0,
-                true,
-                None,
-            );
+        if let Some((image, bounds)) = shown {
+            let radius = self.material.map(|backing| f64::from(backing.radius));
+            crop::draw(image, bounds, view_size, radius);
         }
+    }
+
+    /// 把当前位图留着继续显示，直到 [`Self::release_held`]。
+    pub fn hold_current(&mut self) {
+        self.held = self.image.clone().map(|image| (image, self.bounds));
+    }
+
+    pub fn release_held(&mut self) {
+        self.held = None;
     }
 
     /// 视图里一点（点，左上为原点）点中了哪个候选或哪条译词。
@@ -232,7 +239,7 @@ impl BitmapPainter {
 }
 
 /// 系统辅助功能里开了「减少动态效果」。
-fn reduce_motion() -> bool {
+pub(super) fn reduce_motion() -> bool {
     objc2_app_kit::NSWorkspace::sharedWorkspace().accessibilityDisplayShouldReduceMotion()
 }
 

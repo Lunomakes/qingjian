@@ -8,6 +8,7 @@ mod context_menu;
 mod matrix;
 mod panel;
 mod size;
+mod transition;
 
 use std::cell::{Cell, RefCell};
 
@@ -32,6 +33,7 @@ use super::cloud_icon::CloudIcon;
 use super::frame::Frame;
 use super::preedit::Preedit;
 use super::preedit::PreeditStyle;
+use super::reveal::{Easing, Reveal};
 use super::row::{Row, Tone};
 use super::theme::Theme;
 
@@ -69,6 +71,15 @@ pub struct Ivars {
 
     /// 动画定时器：位图渲染器说有动画在播时跳。
     animation: RefCell<AnimationTimer>,
+
+    /// 「过渡动画」设置。
+    animations: Cell<bool>,
+
+    /// 这一帧要不要做展开 / 收起动画，以及用哪条曲线；窗口定好矩形后由 `start_reveal` 取走。
+    transition: Cell<Option<Easing>>,
+
+    /// 正在播的窗口展开 / 收起。
+    reveal: RefCell<Option<Reveal>>,
 
     /// 点中候选或译词时交给谁（host 注册）。
     on_click: RefCell<Option<ClickHandler>>,
@@ -182,7 +193,7 @@ define_class!(
             if self.ivars().frame.borrow().is_panel() {
                 self.draw_panel();
             } else if let Some(bitmap) = &mut *self.ivars().bitmap.borrow_mut() {
-                bitmap.draw(self.is_dark(), self.backing_scale());
+                bitmap.draw(self.is_dark(), self.backing_scale(), self.bounds().size);
             } else {
                 self.draw();
             }
@@ -204,6 +215,9 @@ impl CandidateView {
             font: RefCell::new(String::new()),
             render_theme: RefCell::new(qingjian_render::Theme::light()),
             animation: RefCell::new(AnimationTimer::default()),
+            animations: Cell::new(true),
+            transition: Cell::new(None),
+            reveal: RefCell::new(None),
             on_click: RefCell::new(None),
             on_panel_mouse: RefCell::new(None),
             scroll_rest: Cell::new(0.0),
@@ -300,7 +314,8 @@ impl CandidateView {
     }
 
     /// 更新内容并返回视图该有的尺寸与内容区。
-    pub fn set_frame(&self, frame: &Frame) -> ViewBounds {
+    pub fn set_frame(&self, frame: &Frame, visible: bool) -> ViewBounds {
+        self.plan_reveal(frame, visible);
         *self.ivars().frame.borrow_mut() = frame.clone();
         self.setNeedsDisplay(true);
         if let Some(panel) = &frame.panel {
@@ -326,15 +341,9 @@ impl CandidateView {
         }
     }
 
-    /// 位图渲染器说有动画在播就起定时器。
+    /// 渲染器或窗口有动画在播就起定时器。
     fn sync_animation(&self) {
-        let next_frame = self
-            .ivars()
-            .bitmap
-            .borrow()
-            .as_ref()
-            .and_then(BitmapPainter::next_frame);
-        if let (Some(interval), Some(mtm)) = (next_frame, MainThreadMarker::new()) {
+        if let Some((interval, mtm)) = self.timer_target() {
             self.ivars()
                 .animation
                 .borrow_mut()
@@ -342,29 +351,30 @@ impl CandidateView {
         }
     }
 
-    /// 定时器每跳：要动画的下一帧并重画；播完就停。
+    /// 定时器每跳：渲染器与窗口动画各走一步并重画；都播完就停。
     pub fn animation_frame(&self) {
-        let next_frame = self
-            .ivars()
-            .bitmap
-            .borrow_mut()
-            .as_mut()
-            .and_then(BitmapPainter::tick);
+        if let Some(bitmap) = &mut *self.ivars().bitmap.borrow_mut()
+            && bitmap.next_frame().is_some()
+        {
+            bitmap.tick();
+        }
+        self.step_reveal();
         self.setNeedsDisplay(true);
-        match (next_frame, MainThreadMarker::new()) {
+        match self.timer_target() {
             // 过渡播完只剩循环动画时，间隔从 16 ms 换成 33 ms
-            (Some(interval), Some(mtm)) => self
+            Some((interval, mtm)) => self
                 .ivars()
                 .animation
                 .borrow_mut()
                 .start(mtm, self, interval),
-            _ => self.ivars().animation.borrow_mut().stop(),
+            None => self.ivars().animation.borrow_mut().stop(),
         }
     }
 
     /// 窗口收起：停动画、忘掉上一帧。
     pub fn stop_animation(&self) {
         self.ivars().animation.borrow_mut().stop();
+        self.cancel_reveal();
         if let Some(bitmap) = &mut *self.ivars().bitmap.borrow_mut() {
             bitmap.forget();
         }

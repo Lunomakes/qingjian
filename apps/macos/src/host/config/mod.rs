@@ -117,6 +117,7 @@ impl Host {
             self.session.collapse();
         }
         self.window.set_font(&config.general.font);
+        self.window.set_animations(config.general.animations);
         self.themes.refresh();
         self.window
             .set_render_theme(self.render_theme(&config.general));
@@ -314,6 +315,7 @@ impl Host {
         if self.themes.refresh() {
             let general = self.settings.config().general.clone();
             tracing::info!(id = general.theme_id(), "主题目录有变化，已重读");
+            self.window.set_animations(general.animations);
             self.window.set_render_theme(self.render_theme(&general));
         }
         let learned = self.engine.poll_glosses();
