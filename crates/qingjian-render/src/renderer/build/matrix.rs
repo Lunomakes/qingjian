@@ -21,7 +21,7 @@ use crate::theme::file::node::{NodeKind, NodeSpec};
 const MAX_CELL_EMS: f32 = 4.0;
 
 /// 云朵图标占几个字宽，与 Core 的 `CLOUD_EMS` 一致。
-const CLOUD_EMS: f32 = 1.1;
+pub(super) const CLOUD_EMS: f32 = 1.1;
 
 impl Builder<'_> {
     /// `spec` 是要展开成矩阵的候选 `repeat` 时，建好网格返回；不是（或没展开）返回 `None`，照常实例化。

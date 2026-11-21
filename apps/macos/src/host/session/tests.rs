@@ -263,3 +263,18 @@ fn expand_keeps_the_highlight_in_place() {
     assert!(session.grid_cells().is_some());
     assert!(!session.expand());
 }
+
+#[test]
+fn grid_keeps_the_width_page_it_opened_from() {
+    let mut session = Session::default();
+    session.reset(None, candidates(100), 5, 0);
+    session.turn_page(1);
+    assert_eq!(session.width_page(), 1);
+    assert!(session.move_rows(1));
+    assert_eq!(session.page, 2);
+    assert_eq!(session.width_page(), 1);
+    session.move_rows(1);
+    assert_eq!(session.width_page(), 1);
+    session.collapse();
+    assert_eq!(session.width_page(), session.page);
+}

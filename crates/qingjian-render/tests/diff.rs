@@ -27,6 +27,7 @@ fn frame(diff: bool) -> Frame {
         mode: Mode::default(),
         columns: 0,
         column_ems: Vec::new(),
+        column_floor: false,
         reversed: false,
     }
 }

@@ -3,6 +3,7 @@
 //! 名字先在候选项里找，再在整帧里找；不认识的条件为假、不认识的绑定为空（节点不画）。
 
 use super::cell::CellContext;
+use super::matrix::CLOUD_EMS;
 use super::row::RowContext;
 use crate::frame::{Frame, Row, Tone};
 use crate::renderer::StatusCell;
@@ -156,6 +157,21 @@ impl<'a> Context<'a> {
             "mode.scheme" => Some(self.frame.mode.scheme.as_str()).filter(|s| !s.is_empty()),
             _ => None,
         }
+    }
+
+    /// 候选文字的最小宽（字宽倍数）：帧开了 `column_floor` 时取自己所在那一列；单行里第几项就是第几列。
+    pub(super) fn text_floor_ems(&self) -> Option<f32> {
+        let RowContext { row, index, .. } = self.row?;
+        if !self.frame.column_floor {
+            return None;
+        }
+        let column = if self.matrix {
+            index % self.frame.columns
+        } else {
+            index
+        };
+        let ems = *self.frame.column_ems.get(column)?;
+        Some(if row.cloud { ems - CLOUD_EMS } else { ems })
     }
 
     /// 译文片段绑定。

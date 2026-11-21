@@ -3,7 +3,7 @@
 
 use std::ops::Range;
 
-use super::CandidateLayout;
+use super::{CandidateLayout, Cell};
 
 /// 矩阵视口显示几行。
 pub const GRID_ROWS: usize = 6;
@@ -16,6 +16,23 @@ const NARROW_EMS: f32 = 0.62;
 
 /// 云端词前面的云朵图标按几个字宽算。
 const CLOUD_EMS: f32 = 1.1;
+
+fn cell_ems(cell: &Cell) -> f32 {
+    let Some(candidate) = cell.candidate() else {
+        return 0.0;
+    };
+    let ems: f32 = candidate
+        .text
+        .chars()
+        .map(|c| if c.is_ascii() { NARROW_EMS } else { 1.0 })
+        .sum();
+    let cloud = if matches!(cell, Cell::Cloud(_)) {
+        CLOUD_EMS
+    } else {
+        0.0
+    };
+    (ems + cloud).min(MAX_CELL_EMS)
+}
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct Grid {
@@ -37,20 +54,16 @@ impl Grid {
         let columns = layout.page_size();
         let mut widths = vec![0.0_f32; columns];
         for (i, cell) in layout.cells().iter().enumerate() {
-            let Some(candidate) = cell.candidate() else {
-                continue;
-            };
-            let mut ems: f32 = candidate
-                .text
-                .chars()
-                .map(|c| if c.is_ascii() { NARROW_EMS } else { 1.0 })
-                .sum();
-            if matches!(cell, super::Cell::Cloud(_)) {
-                ems += CLOUD_EMS;
-            }
             let width = &mut widths[i % columns];
-            *width = width.max(ems.min(MAX_CELL_EMS));
+            *width = width.max(cell_ems(cell));
         }
+        widths
+    }
+
+    /// 各列要留几个字宽：只按第 `row` 行（一页）估，单行与矩阵的列宽都取自同一页，两种状态一样宽。
+    pub fn row_ems(layout: &CandidateLayout, row: usize) -> Vec<f32> {
+        let mut widths: Vec<f32> = layout.page(row).iter().map(cell_ems).collect();
+        widths.resize(layout.page_size(), 0.0);
         widths
     }
 
@@ -264,6 +277,14 @@ mod tests {
         assert!((ems[2] - 1.86).abs() < 1e-5);
         assert_eq!(ems[3], 4.0);
         assert_eq!(ems[4], MAX_CELL_EMS);
+        assert_eq!(Grid::row_ems(&layout, 0), ems_of_first_row(&ems));
+        assert_eq!(Grid::row_ems(&layout, 1), vec![3.0, 0.0, 0.0, 0.0, 0.0]);
+    }
+
+    fn ems_of_first_row(whole: &[f32]) -> Vec<f32> {
+        let mut row = whole.to_vec();
+        row[0] = 1.0;
+        row
     }
 
     #[test]

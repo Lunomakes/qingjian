@@ -11,6 +11,7 @@ pub(super) fn frame(frame: &Frame) -> qingjian_render::Frame {
         highlighted: Some(frame.highlighted),
         columns: frame.columns,
         column_ems: frame.column_ems.clone(),
+        column_floor: frame.column_floor,
         footer: frame.footer.clone(),
         previous_page: frame.pages_around.0,
         next_page: frame.pages_around.1,

@@ -32,6 +32,9 @@ pub struct Session {
     /// 横排展开成矩阵时的视口；`None` 是单行。新一轮查询收回单行。
     pub grid: Option<Grid>,
 
+    /// 矩阵展开那一刻单行显示的页：矩阵开着时列宽一直取这一页，滚动不改列宽。
+    anchor_page: usize,
+
     /// 方向键分两区时（[`qingjian_core::candidate::arrows`]）归拼音行还是候选。改拼音时每敲一键都是新一轮查询，
     /// 所以它跨查询保留，整段输入结束（`preedit` 为空）才回到候选。
     pub focus: Focus,
@@ -74,6 +77,9 @@ impl Session {
     /// 矩阵里竖着移 `delta` 行；还是单行就先从当前页展开（展开本身也算变化）。返回要不要重画。
     pub fn move_rows(&mut self, delta: isize) -> bool {
         let expanding = self.grid.is_none();
+        if expanding {
+            self.anchor_page = self.page;
+        }
         let mut grid = self
             .grid
             .unwrap_or_else(|| Grid::at(&self.layout, self.page));
@@ -86,6 +92,7 @@ impl Session {
     pub fn expand(&mut self) -> bool {
         let expanding = self.grid.is_none();
         if expanding {
+            self.anchor_page = self.page;
             self.grid = Some(Grid::at(&self.layout, self.page));
         }
         expanding
@@ -127,6 +134,15 @@ impl Session {
         self.page = 0;
         self.navigated = true;
         true
+    }
+
+    /// 列宽取自哪一页：矩阵开着是展开时的那一页，单行是当前页。
+    pub fn width_page(&self) -> usize {
+        if self.grid.is_some() {
+            self.anchor_page
+        } else {
+            self.page
+        }
     }
 
     /// 矩阵视口里的格子（按行优先排开）与每行几格；没展开返回 `None`。

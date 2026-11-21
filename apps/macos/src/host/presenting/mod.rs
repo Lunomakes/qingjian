@@ -304,6 +304,7 @@ impl Host {
         let footer = (pages > 1).then(|| format!("{}/{pages}", page + 1));
         // 方向键在拼音行里时候选不画高亮，空格照样上屏原来高亮的那个
         let in_pinyin = self.two_area_arrows() && self.session.focus == Focus::Pinyin;
+        let floor = self.grid_keys();
         let frame = Frame {
             preedit,
             rows,
@@ -313,11 +314,12 @@ impl Host {
                 self.session.highlighted.saturating_sub(first)
             },
             columns,
-            column_ems: if columns > 0 {
-                qingjian_core::Grid::column_ems(&self.session.layout)
+            column_ems: if floor {
+                qingjian_core::Grid::row_ems(&self.session.layout, self.session.width_page())
             } else {
                 Vec::new()
             },
+            column_floor: floor,
             footer,
             pages_around: (page > 0, page + 1 < pages),
             sentence: self.sentence.clone(),

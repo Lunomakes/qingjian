@@ -27,6 +27,9 @@ pub struct Frame {
     /// 矩阵各列要留几个候选字宽（壳按整份候选估的，滚动、移动高亮时不变，窗口才不跳）；空着就按视口里的内容实测。
     pub column_ems: Vec<f32>,
 
+    /// 单行与矩阵里每个候选的文字都至少占 `column_ems` 里自己那一列的宽，两种状态同宽、列对齐。
+    pub column_floor: bool,
+
     /// 右下角页码。
     pub footer: Option<String>,
 

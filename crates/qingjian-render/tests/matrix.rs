@@ -73,3 +73,34 @@ fn single_row_is_unchanged_when_not_expanded() {
     let last = cell(&rendered.hits, 4).unwrap();
     assert!((first.y - last.y).abs() < 0.5 && first.x < last.x);
 }
+
+#[test]
+fn column_floor_makes_single_row_as_wide_as_the_grid_row() {
+    let Ok(library) = FontLibrary::system("zh-CN") else {
+        return;
+    };
+    let mut renderer = Renderer::new(library);
+    let mut frame = scenes::matrix();
+    let columns = frame.columns;
+    for (i, row) in frame.rows.iter_mut().enumerate() {
+        row.annotation.clear();
+        row.index = (i % columns + 1).to_string();
+    }
+    frame.column_floor = true;
+    frame.column_ems = vec![3.0; columns];
+    let mut row = frame.clone();
+    row.rows.truncate(columns);
+    row.columns = 0;
+    let mut width = |frame: &_| {
+        let rendered = renderer
+            .render(frame, Layout::Horizontal, &Theme::light(), 2.0)
+            .unwrap();
+        let (first, last) = (
+            cell(&rendered.hits, 0).unwrap(),
+            cell(&rendered.hits, columns - 1).unwrap(),
+        );
+        last.x + last.width - first.x
+    };
+    let (single, grid) = (width(&row), width(&frame));
+    assert!((single - grid).abs() < 1.0, "{single} vs {grid}");
+}

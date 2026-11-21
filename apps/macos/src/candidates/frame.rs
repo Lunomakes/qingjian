@@ -20,6 +20,9 @@ pub struct Frame {
     /// 矩阵各列要留几个候选字宽（按整份候选估的，滚动、移动高亮时不变，窗口才不跳）。
     pub column_ems: Vec<f32>,
 
+    /// 列宽取自单行那一页：单行与矩阵同宽，见 `qingjian_render::Frame::column_floor`。
+    pub column_floor: bool,
+
     /// 右下角页码。
     pub footer: Option<String>,
 

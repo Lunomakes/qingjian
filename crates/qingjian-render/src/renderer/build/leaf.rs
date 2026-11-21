@@ -2,7 +2,7 @@
 
 use std::ops::Range;
 
-use bamboo_slip::taffy::{Dimension, NodeId, Style};
+use bamboo_slip::taffy::{Dimension, LengthPercentageAuto, NodeId, Style};
 
 use super::layout_style;
 use super::{Builder, Context};
@@ -18,7 +18,7 @@ impl Builder<'_> {
         layout: &BoxSpec,
         ctx: Context,
     ) -> Result<Option<NodeId>, RenderError> {
-        let style = layout_style::from_box(layout, self.scale);
+        let mut style = layout_style::from_box(layout, self.scale);
         let node = match &spec.kind {
             NodeKind::Text {
                 bind,
@@ -36,6 +36,12 @@ impl Builder<'_> {
                 let Some(content) = content else {
                     return Ok(None);
                 };
+                if bind.as_deref() == Some("text")
+                    && let Some(ems) = ctx.text_floor_ems()
+                {
+                    let em = self.theme.font_ref(font).size * self.scale;
+                    style.min_size.width = LengthPercentageAuto::length(ems * em);
+                }
                 let text_style = self
                     .text_style(font, self.color(color, ctx))
                     .stroked(self.stroke(stroke.as_ref(), ctx));

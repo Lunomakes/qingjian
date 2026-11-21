@@ -160,6 +160,7 @@ impl RenderData {
             highlighted: (self.highlight != usize::MAX).then_some(self.highlight),
             columns: self.columns,
             column_ems: self.column_ems.clone(),
+            column_floor: false,
             footer: self.footer.clone(),
             previous_page: self.pages_around.0,
             next_page: self.pages_around.1,
