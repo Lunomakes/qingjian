@@ -16,19 +16,19 @@
   "text": {
     "family": ["PingFang SC", "system"],
     "styles": {
-      "candidate": { "size": 17, "line_height": 22, "weight": "medium" },
+      "candidate": { "size": 16, "line_height": 22 },
       "annotation": { "size": 12, "line_height": 15 },
-      "index": { "size": 9, "line_height": 11, "weight": "medium" }
+      "index": { "size": 8.5, "line_height": 11, "weight": "medium" }
     }
   },
 
   "components": {
     "item": {
-      "type": "frame", "padding": [1, 7, 1, 5],
+      "type": "frame", "padding": [0, 7.5, 2, 4],
       "children": [
         { "type": "frame", "id": "highlight", "transition": { "duration": 120, "easing": "ease-out" },
           "when": "highlighted", "position": "absolute", "inset": [0, 0, 0, 0], "fill": "@accent", "radius": 12 },
-        { "type": "text", "bind": "index", "font": "index", "margin": [7, 5, 0, 0], "min_width": 6,
+        { "type": "text", "bind": "index", "font": "index", "margin": [6.5, 4, 0, 0], "min_width": 6,
           "color": { "if": "highlighted", "then": "@hl_faint", "else": "@faint" } },
         { "type": "use", "component": "word" }
       ]
@@ -48,8 +48,8 @@
   "windows": {
     "vertical": { "radius": 15.5 },
     "horizontal": {
-      "type": "frame", "direction": "column", "padding": 1.5,
-      "fill": "@surface", "radius": 13.5, "border": { "width": 1, "color": "@edge" },
+      "type": "frame", "direction": "column", "padding": 2,
+      "fill": "@surface", "radius": 13.5, "border": { "width": 0, "color": "@edge" },
       "effects": [],
       "children": [
         { "type": "use", "component": "top_line", "margin": [0, 12, 0, 12] },
