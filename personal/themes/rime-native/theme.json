@@ -57,10 +57,7 @@
           "children": [
             { "type": "repeat", "bind": "candidates", "component": "item" },
             { "type": "use", "component": "native-pager" }
-          ] },
-        { "type": "annotation", "bind": "highlighted.annotation", "when": "highlighted.annotation",
-          "font": "annotation", "gloss": "@gloss", "fresh": "@fresh", "faint": "@faint",
-          "margin": [2, 12, 3, 12] }
+          ] }
       ]
     }
   }
