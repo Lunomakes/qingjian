@@ -154,7 +154,6 @@ impl Renderer {
             follows_backdrop: spec.appearance() == MaterialAppearance::Auto
                 && locked_dark.is_none(),
             locked_dark,
-            shadow: spec.shadow.unwrap_or(true),
         });
         let nodes = HitNodes {
             candidates: builder.candidate_nodes,
