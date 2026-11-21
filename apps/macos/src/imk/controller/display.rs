@@ -4,7 +4,7 @@ use super::{
     Candidate, Focus, Preedit, QingjianInputController, RESCORE_LOOKBACK, TextClient, host,
     secure_input,
 };
-use qingjian_core::candidate::arrows::{self, Arrow, ArrowAction};
+use qingjian_core::candidate::arrows::{self, Arrow, ArrowAction, Matrix};
 use qingjian_platform::HighlightKeys;
 
 /// 拼音只在候选窗口显示时，组句中交给应用的 marked text。
@@ -339,6 +339,9 @@ impl QingjianInputController {
             if h.page_keys_expand() {
                 if h.session.expand() {
                     return true;
+                }
+                if delta < 0 && matches!(h.session.matrix(true), Matrix::Open { first_row: true }) {
+                    return h.session.collapse();
                 }
                 let before = h.session.highlighted;
                 let redraw = h.session.move_rows(delta);
