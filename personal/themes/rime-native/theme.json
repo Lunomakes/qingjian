@@ -3,42 +3,65 @@
   "schema": 1,
   "meta": { "id": "rime-native", "name": "Rime 原生" },
 
-  // 照搬 ~/Library/Rime/squirrel.custom.yaml 的颜色、字号与圆角
+  // 对齐 macOS 自带简体拼音：整条胶囊、胶囊高亮、末尾分隔线加向下箭头；量自原生输入法 2x 截图
   "variables": {
-    "text": { "light": "#1c1c1e", "dark": "#e3e3e3" },
-    "gloss": { "light": "#808080", "dark": "#b3b3b3" },
-    "faint": { "light": "#808080", "dark": "#b3b3b3" },
-    "surface": { "light": "#f0f0f0", "dark": "#484848" },
-    "accent": { "light": "#007aff", "dark": "#007aff" },
+    "accent": { "light": "#007aff", "dark": "#0a84ff" },
+    "diff": { "light": "#1d1d1f", "dark": "#f5f5f7" },
     "hl_text": "#ffffff",
-    "hl_gloss": "#ffffff",
-    "hl_faint": "#ffffff"
+    "hl_gloss": "#ffffffd9",
+    "hl_faint": "#ffffffcc",
+    "hl_diff": "#ffffff"
   },
 
   "text": {
     "family": ["PingFang SC", "system"],
     "styles": {
-      "candidate": { "size": 16, "line_height": 22 },
+      "candidate": { "size": 17, "line_height": 22, "weight": "medium" },
       "annotation": { "size": 12, "line_height": 15 },
-      "index": { "size": 8.5, "line_height": 11 }
+      "index": { "size": 9, "line_height": 11, "weight": "medium" }
     }
   },
 
   "components": {
     "item": {
-      "type": "frame", "padding": [0, 9, 0, 8],
+      "type": "frame", "padding": [1, 7, 1, 5],
       "children": [
         { "type": "frame", "id": "highlight", "transition": { "duration": 120, "easing": "ease-out" },
-          "when": "highlighted", "position": "absolute", "inset": [0, 0, 0, 0], "fill": "@accent", "radius": 14.5 },
-        { "type": "text", "bind": "index", "font": "index", "margin": [7, 4, 0, 0],
+          "when": "highlighted", "position": "absolute", "inset": [0, 0, 0, 0], "fill": "@accent", "radius": 12 },
+        { "type": "text", "bind": "index", "font": "index", "margin": [7, 5, 0, 0],
           "color": { "if": "highlighted", "then": "@hl_faint", "else": "@faint" } },
         { "type": "use", "component": "word" }
+      ]
+    },
+
+    "native-pager": {
+      "type": "frame", "when": "page", "margin": [0, 0, 0, "auto"], "align_self": "center",
+      "children": [
+        { "type": "frame", "width": 1, "height": 20, "fill": "@divider", "margin": [0, 0, 0, 6], "align_self": "center" },
+        // 跟着玻璃深浅变不了色，取两种外观下都看得清的系统灰
+        { "type": "frame", "width": 12, "height": 12, "margin": [0, 7, 0, 9], "align_self": "center",
+          "action": "next_page", "fill": { "image": "images/chevron-down.svg" } }
       ]
     }
   },
 
   "windows": {
     "vertical": { "radius": 15.5 },
-    "horizontal": { "radius": 15.5, "padding": 2 }
+    "horizontal": {
+      "type": "frame", "direction": "column", "padding": 1.5,
+      "fill": "@surface", "radius": 13.5, "border": { "width": 0, "color": "@edge" },
+      "effects": [{ "type": "drop-shadow", "y": 3, "blur": 12, "color": "#00000022" }],
+      "children": [
+        { "type": "use", "component": "top_line", "margin": [0, 12, 0, 12] },
+        { "type": "frame", "when": "candidates", "align_self": "stretch", "gap": 3,
+          "children": [
+            { "type": "repeat", "bind": "candidates", "component": "item" },
+            { "type": "use", "component": "native-pager" }
+          ] },
+        { "type": "annotation", "bind": "highlighted.annotation", "when": "highlighted.annotation",
+          "font": "annotation", "gloss": "@gloss", "fresh": "@fresh", "faint": "@faint",
+          "margin": [2, 12, 3, 12] }
+      ]
+    }
   }
 }
