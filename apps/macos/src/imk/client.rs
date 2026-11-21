@@ -7,7 +7,10 @@ use std::cell::Cell;
 use objc2::msg_send;
 use objc2::rc::Retained;
 use objc2::runtime::AnyObject;
-use objc2_foundation::{NSAttributedString, NSDictionary, NSNotFound, NSRange, NSRect, NSString};
+use objc2_app_kit::{NSUnderlineStyle, NSUnderlineStyleAttributeName};
+use objc2_foundation::{
+    NSAttributedString, NSDictionary, NSNotFound, NSNumber, NSRange, NSRect, NSString,
+};
 use qingjian_core::SurroundingText;
 
 /// `{NSNotFound, 0}`：不替换任何已有文本，插到当前位置。
@@ -35,8 +38,15 @@ impl<'a> TextClient<'a> {
     }
 
     /// 设置 marked text（带下划线的未上屏文本），光标放在第 `cursor` 个字符处。空串等于清除。
+    /// 带单下划线：只给纯字符串时 Chromium / Electron 这类应用会自己给整段加底色。
     pub fn set_marked_text(&self, text: &str, cursor: usize) {
-        let string = NSString::from_str(text);
+        let underline = NSNumber::new_isize(NSUnderlineStyle::Single.0);
+        // SAFETY: 只读 AppKit 导出的属性名常量
+        let key: &NSString = unsafe { NSUnderlineStyleAttributeName };
+        let attributes = NSDictionary::from_slices(&[key], &[&*underline as &AnyObject]);
+        let string = unsafe {
+            NSAttributedString::new_with_attributes(&NSString::from_str(text), &attributes)
+        };
         let cursor = NSRange::new(cursor.min(text.chars().count()), 0);
         unsafe {
             let _: () = msg_send![
